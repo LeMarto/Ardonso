@@ -22,13 +22,11 @@
 #define potenciometro_magic_number 1023.0
 
 /*Misc Params*/
-#define pin_led_verde 3
 #define duracion_delay 100
 #define debug true
 
 /*Variables Globales*/
 bool laser_encendido;
-bool led_verde_encendido;
 int valor_laser;
 int valor_potenciometro;
 int delay_potenciometro;
@@ -37,7 +35,6 @@ int delay_potenciometro;
 void setup()
 {
   laser_encendido = false;
-  led_verde_encendido = false;
   valor_laser = 1;
   valor_potenciometro = 0;
   delay_potenciometro = 0;
@@ -48,7 +45,6 @@ void setup()
   pinMode(pin_disparador, OUTPUT);
   pinMode(pin_laser, OUTPUT);
   pinMode(pin_detector, INPUT); 
-  pinMode(pin_led_verde, OUTPUT);
 }
 
 /*Funciones de Debug*/
@@ -98,23 +94,6 @@ bool laser_interrumpido(){
   return false;
 }
 
-/*Funciones de Led*/
-void encender_led_verde(){
-  if (led_verde_encendido)
-    return;
-  digitalWrite(pin_led_verde, HIGH);
-  led_verde_encendido = true;
-  debug_log_ln("Led verde encendido");
-}
-
-void apagar_led_verde(){
-  if (!led_verde_encendido)
-    return;
-  digitalWrite(pin_led_verde, LOW);
-  led_verde_encendido = false;
-  debug_log_ln("Led verde apagado");
-}
-
 /*Funciones para Disparar la camara*/
 void disparar(){
   debug_log("Disparando...");
@@ -148,11 +127,7 @@ void test_de_componentes(){
   debug_log_ln("Test de Componentes");
   encender_laser();
   delay(1000);
-  encender_led_verde();
-  delay(1000);
   disparar();
-  delay(1000);
-  apagar_led_verde();
   delay(1000);
   apagar_laser();
   delay(1000);
@@ -166,19 +141,16 @@ void test_potenciometro(){
 
 void main_loop(){
   encender_laser();
-  encender_led_verde();
 
   if (cambio_estado_potenciometro())
     actualizar_delay_potenciometro();
 
   if (laser_interrumpido())  {
-    apagar_led_verde();
     apagar_laser();
     delay(delay_potenciometro);
     disparar();
     delay(duracion_delay);
     encender_laser();
-    encender_led_verde();
   }
 }
 
