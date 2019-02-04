@@ -15,6 +15,12 @@
 /*Parametros del disparador*/
 #define pin_disparador 8
 
+/*Parametros del potenciometro*/
+#define pin_potenciometro A1
+#define min_delay_potenciometro 5
+#define max_delay_potenciometro 5000
+#define potenciometro_magic_number 1023.0
+
 /*Misc Params*/
 #define pin_led_verde 3
 #define duracion_delay 100
@@ -24,6 +30,8 @@
 bool laser_encendido;
 bool led_verde_encendido;
 int valor_laser;
+int valor_potenciometro;
+int delay_potenciometro;
 
 /*Inicializacion*/
 void setup()
@@ -31,6 +39,8 @@ void setup()
   laser_encendido = false;
   led_verde_encendido = false;
   valor_laser = 1;
+  valor_potenciometro = 0;
+  delay_potenciometro = 0;
   
   if (debug)
     Serial.begin(9600);
@@ -108,6 +118,25 @@ void disparar(){
   debug_log_ln("Listo");
 }
 
+/*Funciones del Potenciometro*/
+bool cambio_estado_potenciometro(){
+  int valor = analogRead(pin_potenciometro);
+  if (valor == valor_potenciometro)
+    return false;
+  valor_potenciometro = valor;
+  return true;
+}
+
+void actualizar_delay_potenciometro(){
+  int diff = max_delay_potenciometro - min_delay_potenciometro;
+  float multiplier = valor_potenciometro / potenciometro_magic_number;
+  delay_potenciometro = min_delay_potenciometro + (diff * multiplier);
+
+  debug_log("Delay: ");
+  debug_log(delay_potenciometro);
+  debug_log_ln("ms");
+}
+
 void test_de_componentes(){
   debug_log_ln("Test de Componentes");
   encender_laser();
@@ -129,10 +158,13 @@ void loop()
   encender_laser();
   encender_led_verde();
 
-  if (laser_interrumpido())
-  {
+  if (cambio_estado_potenciometro())
+    actualizar_delay_potenciometro();
+
+  if (laser_interrumpido())  {
     apagar_led_verde();
     apagar_laser();
+    delay(delay_potenciometro);
     disparar();
     delay(duracion_delay);
     encender_laser();
