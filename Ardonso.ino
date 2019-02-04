@@ -56,6 +56,12 @@ void debug_log(String message){
   if (debug)
     Serial.print(message);
 }
+
+void debug_log_int(int value){
+  if (debug)
+    Serial.print(value);
+}
+
 void debug_log_ln(String message){
   if (debug)
     Serial.println(message);
@@ -121,7 +127,7 @@ void disparar(){
 /*Funciones del Potenciometro*/
 bool cambio_estado_potenciometro(){
   int valor = analogRead(pin_potenciometro);
-  if (valor == valor_potenciometro)
+  if (valor == valor_potenciometro || abs(valor - valor_potenciometro) < 50 )
     return false;
   valor_potenciometro = valor;
   return true;
@@ -133,10 +139,11 @@ void actualizar_delay_potenciometro(){
   delay_potenciometro = min_delay_potenciometro + (diff * multiplier);
 
   debug_log("Delay: ");
-  debug_log(delay_potenciometro);
+  debug_log_int(delay_potenciometro);
   debug_log_ln("ms");
 }
 
+/*Funciones de Testeo*/
 void test_de_componentes(){
   debug_log_ln("Test de Componentes");
   encender_laser();
@@ -152,9 +159,12 @@ void test_de_componentes(){
   delay(5000);
 }
 
-void loop()
-{
-  
+void test_potenciometro(){
+  if (cambio_estado_potenciometro())
+    actualizar_delay_potenciometro();
+}
+
+void main_loop(){
   encender_laser();
   encender_led_verde();
 
@@ -170,4 +180,8 @@ void loop()
     encender_laser();
     encender_led_verde();
   }
+}
+
+void loop(){
+  main_loop();
 }
