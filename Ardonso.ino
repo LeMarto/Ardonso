@@ -1,14 +1,31 @@
-#define pin_disparador 8
+/*
+* ARDONSO
+*/
+
+/***************************
+*
+* Parametros
+*
+***************************/
+
+/*Parametros del laser*/
 #define pin_detector A3
 #define pin_laser 5
+
+/*Parametros del disparador*/
+#define pin_disparador 8
+
+/*Misc Params*/
 #define pin_led_verde 3
 #define duracion_delay 100
 #define debug true
 
+/*Variables Globales*/
 bool laser_encendido;
 bool led_verde_encendido;
 int valor_laser;
 
+/*Inicializacion*/
 void setup()
 {
   laser_encendido = false;
@@ -23,6 +40,8 @@ void setup()
   pinMode(pin_detector, INPUT); 
   pinMode(pin_led_verde, OUTPUT);
 }
+
+/*Funciones de Debug*/
 void debug_log(String message){
   if (debug)
     Serial.print(message);
@@ -31,6 +50,8 @@ void debug_log_ln(String message){
   if (debug)
     Serial.println(message);
 }
+
+/*Funciones de Laser*/
 void encender_laser(){
   if (laser_encendido)
     return;
@@ -47,6 +68,21 @@ void apagar_laser(){
   debug_log_ln("Laser apagado");
 }
 
+bool cambio_estado_laser(){
+  int valor = digitalRead(pin_detector);
+  if (valor == valor_laser)
+    return false;
+  valor_laser = valor;
+  return true;
+}
+
+bool laser_interrumpido(){
+  if (cambio_estado_laser() && valor_laser == 0)
+    return true;
+  return false;
+}
+
+/*Funciones de Led*/
 void encender_led_verde(){
   if (led_verde_encendido)
     return;
@@ -63,6 +99,7 @@ void apagar_led_verde(){
   debug_log_ln("Led verde apagado");
 }
 
+/*Funciones para Disparar la camara*/
 void disparar(){
   debug_log("Disparando...");
   digitalWrite(pin_disparador, HIGH);     //Enciendo Salida
@@ -86,19 +123,6 @@ void test_de_componentes(){
   delay(5000);
 }
 
-bool cambio_estado_laser(){
-  int valor = digitalRead(pin_detector);
-  if (valor == valor_laser)
-    return false;
-  valor_laser = valor;
-  return true;
-}
-
-bool laser_interrumpido(){
-  if (cambio_estado_laser() && valor_laser == 0)
-    return true;
-  return false;
-}
 void loop()
 {
   
