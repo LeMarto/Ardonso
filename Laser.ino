@@ -1,5 +1,5 @@
 /*
-* ARDONSO
+* Laser
 */
 
 /***************************
@@ -8,22 +8,22 @@
 *
 ***************************/
 
-/*Parametros del laser*/
+
+/*Configuracion de PINs*/
+#define pin_disparador 7
 #define pin_detector A3
 #define pin_laser 5
+#define pin_camara 8
 
-/*Parametros del disparador*/
-#define pin_disparador 8
 
 /*Parametros del potenciometro*/
 #define pin_potenciometro A1
-#define min_delay_potenciometro 5
+#define min_delay_potenciometro 1  
 #define max_delay_potenciometro 5000
 #define potenciometro_magic_number 1023.0
 
 /*Misc Params*/
 #define duracion_delay 100
-#define debug true
 
 /*Variables Globales*/
 bool laser_encendido;
@@ -31,36 +31,18 @@ int valor_laser;
 int valor_potenciometro;
 int delay_potenciometro;
 
-/*Inicializacion*/
 void setup()
 {
-  laser_encendido = false;
-  valor_laser = 1;
   valor_potenciometro = 0;
   delay_potenciometro = 0;
+
+  pinMode(pin_disparador, INPUT_PULLUP); 
   
-  if (debug)
-    Serial.begin(9600);
-  
-  pinMode(pin_disparador, OUTPUT);
+  laser_encendido = false;
+  valor_laser = 1;
+  pinMode(pin_camara, OUTPUT);
   pinMode(pin_laser, OUTPUT);
   pinMode(pin_detector, INPUT); 
-}
-
-/*Funciones de Debug*/
-void debug_log(String message){
-  if (debug)
-    Serial.print(message);
-}
-
-void debug_log_int(int value){
-  if (debug)
-    Serial.print(value);
-}
-
-void debug_log_ln(String message){
-  if (debug)
-    Serial.println(message);
 }
 
 /*Funciones de Laser*/
@@ -69,7 +51,6 @@ void encender_laser(){
     return;
   digitalWrite(pin_laser, HIGH);
   laser_encendido = true;
-  debug_log_ln("Laser encendido");
 }
 
 void apagar_laser(){
@@ -77,7 +58,6 @@ void apagar_laser(){
     return;
   digitalWrite(pin_laser, LOW);
   laser_encendido = false;
-  debug_log_ln("Laser apagado");
 }
 
 bool cambio_estado_laser(){
@@ -94,13 +74,19 @@ bool laser_interrumpido(){
   return false;
 }
 
-/*Funciones para Disparar la camara*/
-void disparar(){
-  debug_log("Disparando...");
-  digitalWrite(pin_disparador, HIGH);     //Enciendo Salida
+bool disparador_presionado(){
+  int val = digitalRead(pin_disparador);
+  if (val == LOW)
+    return true;
+  else if (val == HIGH)
+    return false;
+}
+
+/*Funciones para disparar la camara*/
+void disparar_camara(){
+  digitalWrite(pin_camara, HIGH);     //Enciendo Salida
   delay(100);
-  digitalWrite(pin_disparador, LOW);     //Apago Salida
-  debug_log_ln("Listo");
+  digitalWrite(pin_camara, LOW);     //Apago Salida
 }
 
 /*Funciones del Potenciometro*/
@@ -116,30 +102,10 @@ void actualizar_delay_potenciometro(){
   int diff = max_delay_potenciometro - min_delay_potenciometro;
   float multiplier = valor_potenciometro / potenciometro_magic_number;
   delay_potenciometro = min_delay_potenciometro + (diff * multiplier);
-
-  debug_log("Delay: ");
-  debug_log_int(delay_potenciometro);
-  debug_log_ln("ms");
 }
 
-/*Funciones de Testeo*/
-void test_de_componentes(){
-  debug_log_ln("Test de Componentes");
-  encender_laser();
-  delay(1000);
-  disparar();
-  delay(1000);
-  apagar_laser();
-  delay(1000);
-  delay(5000);
-}
-
-void test_potenciometro(){
-  if (cambio_estado_potenciometro())
-    actualizar_delay_potenciometro();
-}
-
-void main_loop(){
+void loop()
+{
   encender_laser();
 
   if (cambio_estado_potenciometro())
@@ -148,12 +114,8 @@ void main_loop(){
   if (laser_interrumpido())  {
     apagar_laser();
     delay(delay_potenciometro);
-    disparar();
+    disparar_camara();
     delay(duracion_delay);
     encender_laser();
   }
-}
-
-void loop(){
-  main_loop();
 }
